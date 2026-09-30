@@ -14,6 +14,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
         .container {
             background-color: #1e293b;
@@ -21,7 +22,7 @@
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             text-align: center;
         }
         h2 {
@@ -30,7 +31,7 @@
         }
         textarea {
             width: 100%;
-            height: 150px;
+            height: 140px;
             background-color: #0f172a;
             color: #fff;
             border: 1px solid #475569;
@@ -76,7 +77,7 @@
             background-color: #38bdf8;
             color: #0f172a;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
@@ -110,8 +111,39 @@
             background: #0f172a;
             padding: 15px;
             border-radius: 8px;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
+        }
+        .question-box {
+            background: #1e293b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #334155;
+        }
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+        }
+        .options-list li {
+            background: #334155;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .options-list li:hover {
+            background: #475569;
+        }
+        .options-list li.correct {
+            background: #16a34a !important;
+            color: #fff;
+        }
+        .options-list li.wrong {
+            background: #dc2626 !important;
+            color: #fff;
         }
     </style>
 </head>
@@ -152,8 +184,8 @@
         btn.classList.add('active');
     }
 
-    function loadDemo() {
-        document.getElementById('inputText').value = "يعتبر علم الاقتصاد واحداً من العلوم الاجتماعية المهمة التي تدرس كيفية استغلاب الموارد المحدودة لإشباع الحاجات الإنسانية غير المحدودة. ويعود ظهور علم الاقتصاد الحديث إلى الكاتب الاسكتلندي آدم سميث في كتابه ثروة الأمم سنة 1776.";
+    function loadDemo] {
+        document.getElementById('inputText').value = "يعتبر علم الاقتصاد واحداً من العلوم الاجتماعية المهمة التي تدرس كيفية استغلال الموارد المحدودة لإشباع الحاجات الإنسانية غير المحدودة. ويعود ظهور علم الاقتصاد الحديث إلى الكاتب الاسكتلندي آدم سميث في كتابه ثروة الأمم سنة 1776.";
     }
 
     function clearAll() {
@@ -170,24 +202,72 @@
             return;
         }
 
-        // تقسيم النص إلى جمل لاستخراج أسئلة منها
-        let sentences = text.split(/[.\n]/).filter(s => s.trim().length > 10);
+        let sentences = text.split(/[.\n]/).filter(s => s.trim().length > 15);
         
         if (sentences.length === 0) {
-            output.innerHTML = "<p style='color: #f87171;'>النص قصير جداً، يرجى وضع نص أطول.</p>";
+            output.innerHTML = "<p style='color: #f87171;'>النص قصير جداً، يرجى وضع نص أطول أو جمل واضحة.</p>";
             return;
         }
 
-        let html = "<h3>الأسئلة المتولدة:</h3>";
+        let html = "<h3>الأسئلة والاختيارات:</h3>";
         let count = Math.min(questionCount, sentences.length);
 
+        // جمل عشوائية إضافية لتوليد خيارات خاطئة
+        let dummyOptions = [
+            "لا يوجد علاقة بين الموارد والحاجات",
+            "هذه العبارة غير دقيقة علمياً",
+            "يعتمد كلياً على القطاع الزراعي فقط",
+            "تم إقرار هذا المبدأ في القرن العشرين",
+            "تعتبر هذه الظاهرة ثانوية وغير مؤثرة"
+        ];
+
         for (let i = 0; i < count; i++) {
-            let sent = sentences[i].trim();
-            html += `<p><strong>س${i+1}:</strong> ما مضمون العبارة: "${sent}"؟</p>`;
-            html += `<hr style="border-color: #334155; margin: 10px 0;">`;
+            let correctAns = sentences[i].trim();
+            // تقصير الجملة إذا كانت طويلة جداً لكي تكون خياراً مناسباً
+            if (correctAns.length > 50) correctAns = correctAns.substring(0, 47) + "...";
+
+            let options = [correctAns];
+            
+            // إضافة خيارات خاطئة عشوائية
+            while(options.length < 4) {
+                let randomDummy = dummyOptions[Math.floor(Math.random() * dummyOptions.length)];
+                if(!options.includes(randomDummy)) {
+                    options.push(randomDummy);
+                }
+            }
+
+            // خلط الاختيارات عشوائياً
+            options.sort(() => Math.random() - 0.5);
+
+            html += `<div class="question-box">`;
+            html += `<p><strong>س${i+1}:</strong> من خلال النص، ما هو الصحيح حول: <br><span style="color: #38bdf8;">"${correctAns}"</span></p>`;
+            html += `<ul class="options-list">`;
+            
+            options.forEach(opt => {
+                let isCorrect = (opt === correctAns);
+                html += `<li onclick="checkAnswer(this, ${isCorrect})">${opt}</li>`;
+            });
+
+            html += `</ul></div>`;
         }
 
         output.innerHTML = html;
+    }
+
+    function checkAnswer(element, isCorrect) {
+        let parent = element.parentElement;
+        let items = parent.querySelectorAll('li');
+        
+        items.forEach(li => {
+            li.style.pointerEvents = 'none'; // تعطيل النقر بعد الإجابة
+            if(li.getAttribute('onclick').includes('true')) {
+                li.classList.add('correct');
+            }
+        });
+
+        if (!isCorrect) {
+            element.classList.add('wrong');
+        }
     }
 </script>
 
